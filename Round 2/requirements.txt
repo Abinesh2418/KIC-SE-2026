@@ -1,0 +1,7 @@
+django>=5.0
+django-widget-tweaks>=1.5
+whitenoise>=6.5
+gunicorn>=21.2
+dj-database-url>=2.1
+psycopg2-binary>=2.9
+openpyxl>=3.1

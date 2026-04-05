@@ -1,0 +1,24 @@
+﻿{% extends 'debugchallenge/base.html' %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block content %}
+<div class="container-sm fade-in">
+    <div class="card-wrap">
+        <div class="card-shadow"></div>
+        <div class="card text-center" style="padding: 48px 32px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">&#128274;</div>
+            <h2 style="font-weight: 900;">Leaderboard is <span class="text-accent">Private</span></h2>
+            <p class="text-muted mt-2" style="font-size: 15px; max-width: 360px; margin: 12px auto 0;">
+                The admin has set the leaderboard to private. Results will be available once the admin makes it public.
+            </p>
+            <div class="mt-4">
+                <div class="btn-wrap" style="display: inline-block;">
+                    <div class="btn-shadow"></div>
+                    <a href="{% url 'debugchallenge:home' %}" class="btn btn-primary">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

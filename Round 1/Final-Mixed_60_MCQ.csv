@@ -1,0 +1,61 @@
+Question No,Question,Option A,Option B,Option C,Option D,Answer
+1,Which symbol is used for exponentiation in Python?,^,**,//,%%,B
+2,What data structure follows FIFO?,Stack,Tree,Queue,Graph,C
+3,Main goal of supervised learning?,Find patterns,Predict using labeled data,Reduce dimension,Cluster,B
+4,Which operator is used for logical AND?,&&,and,&,||,B
+5,Binary equivalent of decimal 10 is:,1010,1001,1100,1110,A
+6,Which algorithm is used for regression?,K-Means,Logistic Regression,Linear Regression,Apriori,C
+7,Which function converts a string into an integer?,str(),float(),int(),convert(),C
+8,What is DNS used for?,Encrypting data,Mapping domain names to IP addresses,Storing files,Compressing images,B
+9,Which function is commonly used as the activation function in Logistic Regression?,ReLU,Sigmoid,Softmax,Linear,B
+10,List index starts from:,1,0,-1,2,B
+11,What is a compiler?,Converts high-level language to machine code,Executes line by line,Stores database,Controls hardware,A
+12,What is the main purpose of PCA?,Classification,Clustering,Dimensionality Reduction,Regression,C
+13,Python is case:,Insensitive,Sensitive,Random,Binary,B
+14,Which memory is fastest?,HDD,SSD,RAM,Cache,D
+15,Overfitting means:,"Good on train, bad on test",Bad everywhere,Too simple,Low variance,A
+16,Which is a correct variable name?,1name,name_1,name-1,class,B
+17,Which of the following is a DML command?,CREATE,ALTER,INSERT,DROP,C
+18,Underfitting occurs when model is:,Too complex,Too simple,Large data,High LR,B
+19,Tuple uses:,[],{},(),<>,C
+20,Which keyword restricts direct access to class members?,static,private,protected,public,B
+21,KNN is based on:,Probabilities,Distance,Trees,Gradients,B
+22,Which of the following is immutable?,List,Dictionary,Set,Tuple,D
+23,What is the purpose of virtual memory?,Increase RAM physically,Execute multiple OS,Use disk as extension of RAM,Prevent deadlock,C
+24,Entropy measures:,Accuracy,Impurity,Bias,Depth,B
+25,What is the default return value of a function if no return statement is used?,0,False,None,Empty string,C
+26,Which scheduling algorithm may cause starvation?,FCFS,Round Robin,Priority Scheduling,FIFO,C
+27,Learning rate controls:,Dataset size,Step size,Features,Accuracy,B
+28,What is the purpose of the global keyword?,Create global variable inside function,Delete global variable,Import global module,Make function private,A
+29,Which SQL command removes all rows but keeps table structure?,DELETE,DROP,TRUNCATE,REMOVE,C
+30,Which activation introduces non-linearity?,Linear,Identity,ReLU,Mean,C
+31,What is the use of with statement?,Loop control,File handling & resource management,Conditional check,Import module,B
+32,What is a deadlock?,Infinite loop,Processes waiting for each other,Memory leak,Cache miss,B
+33,Feature scaling is important for:,Decision Tree,KNN,Random Forest,Naive Bayes,B
+34,Which decorator is used to define a class method?,@staticmethod,@classmethod,@property,@abstract,B
+35,TCP differs from UDP because TCP is:,Faster,Connectionless,Reliable and connection-oriented,Used only for video,C
+36,Cross-validation is used to:,Increase data,Evaluate reliability,Remove noise,Speed up training,B
+37,Which of the following is used to create a virtual environment in Python?,pip install,python -m venv,virtual(),env create,B
+38,CAP theorem states that a distributed system can guarantee:,All three,At most two of three,Only consistency,Only availability,B
+39,Bias-Variance tradeoff explains:,Storage,Underfitting vs Overfitting,Speed,Features,B
+40,What is the time complexity of accessing an element in a dictionary (average case)?,O(n),O(log n),O(1),O(n²),C
+41,ACID properties apply to:,OS,Networking,Database transactions,Compiler,C
+42,Random Forest reduces overfitting using:,Single tree,Bagging,Removing features,Smaller data,B
+43,Which method removes all items from a list?,delete(),remove(),clear(),pop(),C
+44,Time complexity of searching in balanced BST?,O(n),O(log n),O(n log n),O(1),B
+45,Multicollinearity affects mainly:,Linear models,Trees,K-Means,PCA,A
+46,What is the output of print(10//3)?,3.33,3,4,3.0,B
+47,Worst-case time complexity of QuickSort?,O(n log n),O(n²),O(log n),O(n),B
+48,Standardization makes:,0–1 range,"Mean 0, std 1",Binary,Removes bias,B
+49,What is the output of print('5'+'3')?,8,53,Error,5 3,B
+50,Time complexity of inserting into a binary heap?,O(1),O(log n),O(n),O(n log n),B
+51,SVM margin represents:,Learning rate,Distance to closest points,Accuracy,Features,B
+52,What is the output of print(type(5))?,int,<class 'int'>,integer,type int,B
+53,"In Round Robin, decreasing time quantum will:",Reduce context switching,Increase context switching,Eliminate starvation,Make it FCFS,B
+54,Which evaluation metric is most appropriate for regression problems?,Accuracy,F1 Score,Mean Squared Error (MSE),Precision,C
+55,What is the output of print(5==5.0)?,True,False,Error,None,A
+56,Which normal form removes transitive dependency?,1NF,2NF,3NF,BCNF,C
+57,Which metric is best for imbalanced classification?,Accuracy,MSE,F1 Score,R²,C
+58,"What is the output of print([1,2,3]*2)?","[2,4,6]","[1,2,3,1,2,3]",Error,6,B
+59,Context switching occurs when:,CPU changes process,Disk accessed,RAM full,Interrupt disabled,A
+60,Gradient descent updates weights using:,Random guessing,Second derivative,Derivative of loss function,Bayes theorem,C

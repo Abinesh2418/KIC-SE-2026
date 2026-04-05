@@ -1,0 +1,104 @@
+﻿{% extends 'debugchallenge/base.html' %}
+{% load debugchallenge_filters %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lb-rank {
+        width: 40px; height: 40px;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 900; font-size: 15px;
+        border: 3px solid var(--border-main);
+        border-radius: 8px;
+        background: var(--bg-card);
+    }
+    .lb-rank.gold { background: #FFC480; color: #111827; }
+    .lb-rank.silver { background: #EBDBB7; color: #111827; }
+    .lb-rank.bronze { background: #DBA97D; color: #111827; }
+    .lb-table th, .lb-table td {
+        padding: 14px 16px;
+        border-bottom: 3px solid var(--border-main);
+    }
+    .lb-table thead th { font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; color: var(--text-secondary); }
+    .lb-table { width: 100%; border-collapse: collapse; }
+    .lb-table tbody tr { transition: background 0.15s; }
+    .lb-table tbody tr:hover { background: var(--bg-card-alt); }
+    .score-pill {
+        display: inline-block; padding: 4px 12px;
+        border: 3px solid var(--border-main);
+        border-radius: 6px;
+        font-weight: 800; font-size: 15px;
+        background: var(--accent-orange);
+        color: #111827;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container fade-in">
+    <div class="text-center" style="margin-bottom: 32px;">
+        <h1 style="font-size: 36px; font-weight: 900; letter-spacing: -1px;">
+            Leader<span class="text-accent">board</span>
+        </h1>
+        {% if is_admin or is_evaluator %}
+        <a href="{% url 'debugchallenge:export_leaderboard' %}" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 20px; background: var(--accent-orange, #FFC480); color: #111827; font-weight: 700; font-size: 13px; border: 3px solid var(--border-color, #111827); border-radius: 8px; text-decoration: none; cursor: pointer; transition: transform 0.1s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            &#x1F4E5; Download Results (.xlsx)
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="card-wrap">
+        <div class="card-shadow"></div>
+        <div class="card" style="padding: 0; overflow: hidden;">
+            {% if participants %}
+            <div style="overflow-x: auto;">
+                <table class="lb-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px; text-align: center;">Rank</th>
+                            <th>Participant</th>
+                            {% if show_scores %}
+                            <th style="text-align: center;">Score</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in participants %}
+                        <tr>
+                            <td style="text-align: center;">
+                                {% if forloop.counter == 1 %}
+                                    <span class="lb-rank gold">1</span>
+                                {% elif forloop.counter == 2 %}
+                                    <span class="lb-rank silver">2</span>
+                                {% elif forloop.counter == 3 %}
+                                    <span class="lb-rank bronze">3</span>
+                                {% else %}
+                                    <span class="lb-rank">#{{ forloop.counter }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="font-weight: 700;">{{ p.user.username }}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">@{{ p.user.username }}</div>
+                            </td>
+                            {% if show_scores %}
+                            <td style="text-align: center;">
+                                <span class="score-pill">{{ p.score }}<span style="font-weight: 500; font-size: 12px; opacity: 0.7;">/{{ total_bugs }}</span></span>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="text-center" style="padding: 48px;">
+                    <p class="text-muted" style="font-size: 15px;">No submissions yet. The leaderboard will appear after participants submit.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

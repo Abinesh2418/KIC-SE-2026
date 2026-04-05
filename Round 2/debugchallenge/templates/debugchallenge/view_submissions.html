@@ -1,0 +1,149 @@
+﻿{% extends 'debugchallenge/base.html' %}
+
+{% block title %}Submissions - {{ participant.user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sub-card {
+        border: 3px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        background: var(--card-bg);
+        margin-bottom: 20px;
+    }
+    .sub-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .sub-title { font-size: 18px; font-weight: 900; }
+    .sub-type {
+        display: inline-block;
+        padding: 4px 12px;
+        border: 3px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .sub-type.classification { background: #a78bfa; color: #111827; }
+    .sub-type.regression { background: #60a5fa; color: #111827; }
+    .grade-form {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 2px solid var(--border-color);
+    }
+    .grade-input {
+        width: 80px;
+        padding: 8px 12px;
+        border: 3px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: inherit;
+        background: var(--bg-input);
+        color: var(--text-primary);
+    }
+    .notes-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 8px 12px;
+        border: 3px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: inherit;
+        background: var(--bg-input);
+        color: var(--text-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container fade-in">
+    <div style="margin-bottom: 24px;">
+        <a href="{% url 'debugchallenge:admin_dashboard' %}" class="btn btn-outline btn-sm" style="margin-bottom: 12px;">&larr; Back to Dashboard</a>
+        <h1 style="font-size: 28px; font-weight: 900;">
+            Submissions - <span class="text-accent">@{{ participant.user.username }}</span>
+        </h1>
+        <p class="text-muted" style="font-size: 14px;">
+            Score: {{ participant.score }} &bull;
+            Tab switches: {{ participant.tab_switch_count }} &bull;
+            {% if participant.time_taken_ms %}Time: {{ participant.time_taken_ms|ms_to_time }}{% endif %}
+        </p>
+    </div>
+
+    {% for challenge in challenges %}
+    <div class="card-wrap" style="margin-bottom: 20px;">
+        <div class="card-shadow"></div>
+        <div class="card">
+            <div class="sub-header">
+                <div>
+                    <span class="sub-type {{ challenge.challenge_type }}">{{ challenge.get_challenge_type_display }}</span>
+                    <div class="sub-title" style="margin-top: 8px;">{{ challenge.title }}</div>
+                    <div class="text-muted" style="font-size: 13px;">{{ challenge.total_bugs }} bugs &bull; {{ challenge.notebook_filename }}</div>
+                </div>
+            </div>
+
+            {% for sub in submissions %}
+                {% if sub.challenge_id == challenge.id %}
+                <div style="margin-top: 12px;">
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                        <div class="btn-wrap" style="display: inline-block;">
+                            <div class="btn-shadow"></div>
+                            <a href="{% url 'debugchallenge:download_submission' sub.id %}" class="btn btn-primary btn-sm">
+                                &#128229; Download Notebook
+                            </a>
+                        </div>
+                        <span class="text-muted" style="font-size: 13px;">
+                            Uploaded: {{ sub.submitted_at|date:"M d, H:i:s" }}
+                        </span>
+                        {% if sub.is_graded %}
+                            <span class="badge badge-success">Graded: {{ sub.score }} pts</span>
+                        {% else %}
+                            <span class="badge badge-warning">Not Graded</span>
+                        {% endif %}
+                    </div>
+
+                    {% if sub.admin_notes %}
+                    <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">
+                        <strong>Notes:</strong> {{ sub.admin_notes }}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'debugchallenge:grade_submission' sub.id %}" class="grade-form">
+                        {% csrf_token %}
+                        <div>
+                            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Score</label>
+                            <input type="number" name="score" value="{{ sub.score }}" min="0" max="{{ challenge.total_bugs }}" class="grade-input">
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">Admin Notes</label>
+                            <input type="text" name="admin_notes" value="{{ sub.admin_notes }}" placeholder="Optional grading notes..." class="notes-input">
+                        </div>
+                        <div class="btn-wrap" style="display: inline-block;">
+                            <div class="btn-shadow"></div>
+                            <button type="submit" class="btn btn-primary btn-sm">Grade</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            {% empty %}
+                <p class="text-muted" style="margin-top: 12px; font-size: 14px;">No submission for this challenge.</p>
+            {% endfor %}
+
+            {% if not submissions %}
+                <p class="text-muted" style="margin-top: 12px; font-size: 14px;">No submission for this challenge.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+db.sqlite3
+pgdata
+staticfiles
+.env.docker
+*.md
+*.jpeg
+.gitignore

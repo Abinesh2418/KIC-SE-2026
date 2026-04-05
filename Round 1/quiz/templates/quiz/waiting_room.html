@@ -1,0 +1,51 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Waiting Room{% endblock %}
+
+{% block content %}
+<div class="container-sm fade-in">
+    <div class="card-wrap">
+        <div class="card-shadow"></div>
+        <div class="card text-center">
+            {% if participant.status == 'pending' %}
+                <div style="margin-bottom: 20px;">
+                    <span class="sparkle sparkle-orange" style="width: 16px; height: 16px;"></span>
+                </div>
+                <h2 style="font-weight: 900;">Waiting for Approval</h2>
+                <p class="text-muted mt-2" style="font-size: 14px;">
+                    Hi <strong>{{ participant.user.username }}</strong>, your registration is pending admin approval.<br>
+                    Please wait here — you will be redirected automatically when approved.
+                </p>
+                <div class="mt-4"><span class="badge badge-warning">Pending</span></div>
+            {% elif participant.status == 'approved' %}
+                {% if event and event.is_running %}
+                    <div style="margin-bottom: 20px;">
+                        <span class="sparkle sparkle-green" style="width: 16px; height: 16px;"></span>
+                    </div>
+                    <h2 style="font-weight: 900;">Quiz is <span class="text-accent">Live!</span></h2>
+                    <p class="text-muted mt-2">The quiz has started. Click below to enter.<br>
+                    <small>Your personal timer of <strong>{{ event.duration_minutes }} minutes</strong> begins when you enter.</small></p>
+                    <div class="mt-4">
+                        <div class="btn-wrap" style="display: inline-block;">
+                            <div class="btn-shadow"></div>
+                            <a href="{% url 'quiz:quiz' %}" class="btn btn-primary">Enter Quiz</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div style="margin-bottom: 20px;">
+                        <span class="sparkle sparkle-green" style="width: 16px; height: 16px;"></span>
+                    </div>
+                    <h2 style="font-weight: 900;">You're <span class="text-green">Approved!</span></h2>
+                    <p class="text-muted mt-2" style="font-size: 14px;">
+                        Welcome <strong>{{ participant.user.username }}</strong>! You're approved to participate.<br>
+                        The quiz hasn't started yet. Stay on this page.
+                    </p>
+                    <div class="mt-4"><span class="badge badge-success">Approved</span></div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

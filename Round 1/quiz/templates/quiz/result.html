@@ -1,0 +1,65 @@
+{% extends 'quiz/base.html' %}
+{% load quiz_filters %}
+
+{% block title %}Your Result{% endblock %}
+
+{% block content %}
+<div class="container-sm fade-in">
+    <div class="card-wrap">
+        <div class="card-shadow"></div>
+        <div class="card text-center">
+            <div style="margin-bottom: 20px;">
+                <span class="sparkle sparkle-green" style="width: 16px; height: 16px;"></span>
+            </div>
+            <h2 style="font-weight: 900;">Quiz <span class="text-accent">Completed!</span></h2>
+            <p class="text-muted mt-2" style="font-size: 14px;">Thank you for participating in ML Fest.</p>
+
+            {% if show_score %}
+                <div class="grid-2 mt-4">
+                    <div class="stat-card-wrap">
+                        <div class="stat-shadow"></div>
+                        <div class="stat-card">
+                            <div class="stat-value text-accent">{{ participant.score }}</div>
+                            <div class="stat-label">Score</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-wrap">
+                        <div class="stat-shadow"></div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ total }}</div>
+                            <div class="stat-label">Total Questions</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if participant.time_taken_ms %}
+                <div class="mt-4" style="font-size: 14px; color: var(--text-secondary);">
+                    Time taken: {{ participant.time_taken_ms|ms_to_time }}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="mt-4" style="padding: 24px;">
+                    <p style="font-size: 15px; color: var(--text-secondary);">
+                        Your answers have been recorded successfully.<br>
+                        The admin will reveal scores later.
+                    </p>
+                    <div class="mt-4"><span class="badge badge-warning">Scores Hidden</span></div>
+                </div>
+            {% endif %}
+
+            {% if participant.tab_switch_violated %}
+                <div class="alert alert-error mt-4">
+                    ⚠ You were flagged for exceeding the tab switch limit ({{ participant.tab_switch_count }} switches).
+                </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <div class="btn-wrap" style="display: inline-block;">
+                    <div class="btn-shadow"></div>
+                    <a href="{% url 'quiz:leaderboard' %}" class="btn btn-primary">View Leaderboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

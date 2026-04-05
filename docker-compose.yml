@@ -1,0 +1,128 @@
+# ============================================================
+# ML Fest — Production Docker Compose
+# ============================================================
+# 1 PostgreSQL server (port 7737) — 3 separate databases
+# 3 Django apps: Round 1 (7738), Round 2 (7739), Round 3 (7740)
+# Each round has its own database and auth table.
+# Admin credentials are the same across all rounds.
+# ============================================================
+
+services:
+
+  # ── PostgreSQL Database ──────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mlfest_r1
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-teamqernels@iQube42}
+    ports:
+      - "${DB_EXTERNAL_PORT:-7737}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Round 1: MCQ Quiz (port 7738) ───────────────────────
+  round1:
+    build:
+      context: .
+      dockerfile: Round 1/Dockerfile.prod
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/app/entrypoint.prod.sh"]
+    ports:
+      - "${ROUND1_PORT:-7738}:8000"
+    environment:
+      - DB_NAME=mlfest_r1
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-teamqernels@iQube42}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - SECRET_KEY=${SECRET_KEY:-Qk3rn3Ls-MLF3st-2026-Pr0dSecReT-xZ9wV7mN4bQ8cJ2p}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-teamqernels@gmail.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-teamqernels@iQube42}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-teamqernels@gmail.com}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-1}
+    volumes:
+      - round1_static:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.create_connection(('localhost',8000),2); s.close()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  # ── Round 2: ML Debug Challenge (port 7739) ─────────────
+  round2:
+    build:
+      context: .
+      dockerfile: Round 2/Dockerfile.prod
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/app/entrypoint.prod.sh"]
+    ports:
+      - "${ROUND2_PORT:-7739}:8000"
+    environment:
+      - DB_NAME=mlfest_r2
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-teamqernels@iQube42}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - SECRET_KEY=${SECRET_KEY:-Qk3rn3Ls-MLF3st-2026-Pr0dSecReT-xZ9wV7mN4bQ8cJ2p}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-teamqernels@gmail.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-teamqernels@iQube42}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-teamqernels@gmail.com}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-1}
+    volumes:
+      - round2_static:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Round 3: ML CTF (port 7740) ─────────────────────────
+  round3:
+    build:
+      context: .
+      dockerfile: Round 3/Dockerfile.prod
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/app/entrypoint.prod.sh"]
+    ports:
+      - "${ROUND3_PORT:-7740}:8000"
+    environment:
+      - DB_ENGINE=postgresql
+      - DB_NAME=mlfest_r3
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-teamqernels@iQube42}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DJANGO_SECRET_KEY=${SECRET_KEY:-Qk3rn3Ls-MLF3st-2026-Pr0dSecReT-xZ9wV7mN4bQ8cJ2p}
+      - DJANGO_DEBUG=${DEBUG:-False}
+      - DJANGO_ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-teamqernels@gmail.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-teamqernels@iQube42}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-teamqernels@gmail.com}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-1}
+    volumes:
+      - round3_static:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  round1_static:
+  round2_static:
+  round2_media:
+  round3_static:
+  round3_media:

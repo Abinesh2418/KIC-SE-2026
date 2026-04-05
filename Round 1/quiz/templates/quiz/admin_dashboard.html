@@ -1,0 +1,387 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 3px solid var(--border-color); padding-bottom: 0; }
+    .tab-btn {
+        padding: 10px 20px;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -3px;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    .tab-btn:hover { color: var(--text-primary); }
+    .tab-btn.active {
+        color: var(--accent-orange);
+        border-bottom-color: var(--accent-orange);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .action-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .toggle-row {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 2px solid var(--border-color);
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-weight: 700; font-size: 14px; }
+    .toggle-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .toggle-switch { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+        position: absolute; inset: 0; cursor: pointer;
+        background: var(--border-color); border-radius: 26px;
+        border: 3px solid var(--border-color);
+        transition: 0.2s;
+    }
+    .toggle-slider::before {
+        content: ''; position: absolute;
+        height: 16px; width: 16px;
+        left: 2px; bottom: 2px;
+        background: white; border-radius: 50%;
+        transition: 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent-orange); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th, .admin-table td { padding: 12px 14px; border-bottom: 3px solid var(--border-color); text-align: left; }
+    .admin-table thead th { font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; color: var(--text-secondary); }
+    .admin-table tbody tr:hover { background: var(--hover-bg); }
+
+    @media (max-width: 768px) {
+        .dash-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container fade-in">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h1 style="font-size: 28px; font-weight: 900; letter-spacing: -1px;">Admin <span class="text-accent">Dashboard</span></h1>
+            <p class="text-muted" style="font-size: 14px;">ML Fest MCQ Round — Team Qernels</p>
+        </div>
+        <div>
+            {% if event.is_running %}
+                <span class="badge badge-success">Event Live</span>
+            {% else %}
+                <span class="badge badge-danger">Event Stopped</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-4 mb-4">
+        <div class="stat-card-wrap">
+            <div class="stat-shadow"></div>
+            <div class="stat-card">
+                <div class="stat-value text-accent">{{ total_questions }}</div>
+                <div class="stat-label">Questions</div>
+            </div>
+        </div>
+        <div class="stat-card-wrap">
+            <div class="stat-shadow"></div>
+            <div class="stat-card">
+                <div class="stat-value">{{ participants|length }}</div>
+                <div class="stat-label">Registered</div>
+            </div>
+        </div>
+        <div class="stat-card-wrap">
+            <div class="stat-shadow"></div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--accent-red);">{{ pending|length }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="stat-card-wrap">
+            <div class="stat-shadow"></div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #22c55e;">{{ submitted|length }}</div>
+                <div class="stat-label">Submitted</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-grid">
+        <!-- Left Column -->
+        <div>
+            <!-- Event Controls -->
+            <div class="card-wrap" style="margin-bottom: 20px;">
+                <div class="card-shadow"></div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Event Controls</h3>
+                        {% if event.is_running %}
+                            <span class="badge badge-success">{{ event.duration_minutes }}min per participant</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="action-btns mb-4">
+                        {% if not event.is_running %}
+                            <div class="btn-wrap">
+                                <div class="btn-shadow"></div>
+                                <a href="{% url 'quiz:start_event' %}" class="btn btn-primary" onclick="return confirm('Start the event now?')">
+                                    Start Event
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="btn-wrap">
+                                <div class="btn-shadow"></div>
+                                <a href="{% url 'quiz:stop_event' %}" class="btn btn-danger" onclick="return confirm('Stop the event? All pending submissions will be auto-submitted.')">
+                                    Stop Event
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class="btn-wrap">
+                            <div class="btn-shadow"></div>
+                            <a href="{% url 'quiz:leaderboard' %}" class="btn btn-outline" target="_blank">Leaderboard</a>
+                        </div>
+                        <div class="btn-wrap">
+                            <div class="btn-shadow"></div>
+                            <a href="{% url 'quiz:reset_quiz' %}" class="btn btn-danger" onclick="return confirm('Reset the quiz? This will clear ALL answers, scores, and submissions. All approved participants will be able to take the next round. This cannot be undone!')">
+                                Reset Quiz
+                            </a>
+                        </div>
+                        <div class="btn-wrap">
+                            <div class="btn-shadow"></div>
+                            <a href="{% url 'quiz:remove_all_users' %}" class="btn btn-danger" onclick="return confirm('⚠️ Remove ALL participants from the system? This will delete ALL user accounts and data. This cannot be undone!')">
+                                Remove All Users
+                            </a>
+                        </div>
+                    </div>
+
+                    <form method="post" action="{% url 'quiz:update_settings' %}">
+                        {% csrf_token %}
+                        <div class="grid-2" style="margin-bottom: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">Duration (minutes)</label>
+                                {{ settings_form.duration_minutes }}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Tab Switches</label>
+                                {{ settings_form.max_tab_switches }}
+                            </div>
+                        </div>
+
+                        <!-- Visibility Toggles -->
+                        <div style="margin-bottom: 16px;">
+                            <div class="toggle-row">
+                                <div>
+                                    <div class="toggle-label">Public Leaderboard</div>
+                                    <div class="toggle-desc">Participants can view the leaderboard</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    {{ settings_form.leaderboard_public }}
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-row">
+                                <div>
+                                    <div class="toggle-label">Show Score to Participants</div>
+                                    <div class="toggle-desc">Participants see their own score after submission</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    {{ settings_form.show_score_to_participant }}
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="btn-wrap" style="display: inline-block;">
+                            <div class="btn-shadow"></div>
+                            <button type="submit" class="btn btn-primary btn-sm">Update Settings</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab Switch Violations -->
+            {% if violated %}
+            <div class="card-wrap">
+                <div class="card-shadow" style="background: var(--accent-red);"></div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title" style="color: var(--accent-red);">Tab Switch Violations</h3>
+                        <span class="badge badge-danger">{{ violated|length }}</span>
+                    </div>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th>Switches</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in violated %}
+                            <tr>
+                                <td>
+                                    <strong>@{{ p.user.username }}</strong>
+                                    <div style="font-size: 12px; color: var(--text-muted);">📞 {{ p.phone_number|default:'—' }}</div>
+                                </td>
+                                <td><span style="font-weight: 800; color: var(--accent-red);">{{ p.tab_switch_count }}</span></td>
+                                <td>
+                                    {% if p.has_submitted %}
+                                        <span class="badge badge-warning">Auto-submitted</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Violated</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Participants -->
+        <div>
+            <div class="card-wrap">
+                <div class="card-shadow"></div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Participants</h3>
+                        {% if pending %}
+                            <div class="btn-wrap" style="display: inline-block;">
+                                <div class="btn-shadow"></div>
+                                <a href="{% url 'quiz:approve_all' %}" class="btn btn-primary btn-sm" onclick="return confirm('Approve all pending?')">
+                                    Approve All ({{ pending|length }})
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="tab-bar">
+                        <button class="tab-btn active" onclick="switchTab('pending', this)">Pending ({{ pending|length }})</button>
+                        <button class="tab-btn" onclick="switchTab('approved', this)">Approved ({{ approved|length }})</button>
+                        <button class="tab-btn" onclick="switchTab('disqualified', this)">DQ'd ({{ disqualified|length }})</button>
+                    </div>
+
+                    <!-- Pending Tab -->
+                    <div class="tab-content active" id="tab-pending">
+                        {% if pending %}
+                        <table class="admin-table">
+                            <thead><tr><th>Name</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            {% for p in pending %}
+                            <tr>
+                                <td>
+                                    <strong>@{{ p.user.username }}</strong>
+                                    <div style="font-size: 12px; color: var(--text-muted);">{{ p.user.email }}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">📞 {{ p.phone_number|default:'—' }}</div>
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        <a href="{% url 'quiz:approve_participant' p.id %}" class="btn btn-primary btn-sm">Approve</a>
+                                        <a href="{% url 'quiz:disqualify_participant' p.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Disqualify {{ p.user.username }}?')">DQ</a>
+                                        <a href="{% url 'quiz:remove_participant' p.id %}" class="btn btn-outline btn-sm" style="color: var(--accent-red); border-color: var(--accent-red);" onclick="return confirm('Remove {{ p.user.username }} from the system entirely? This will delete their account and cannot be undone!')">Remove</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted text-center" style="padding: 24px; font-size: 14px;">No pending participants.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Approved Tab -->
+                    <div class="tab-content" id="tab-approved">
+                        {% if approved %}
+                        <table class="admin-table">
+                            <thead><tr><th>Name</th><th>Status</th><th>Tabs</th><th></th></tr></thead>
+                            <tbody>
+                            {% for p in approved %}
+                            <tr>
+                                <td>
+                                    <strong>@{{ p.user.username }}</strong>
+                                    <div style="font-size: 12px; color: var(--text-muted);">📞 {{ p.phone_number|default:'—' }}</div>
+                                </td>
+                                <td>
+                                    {% if p.has_submitted %}
+                                        <span class="badge badge-success">Submitted ({{ p.score }})</span>
+                                    {% elif p.started_at %}
+                                        <span class="badge badge-info">In Progress</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Not Started</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span {% if p.tab_switch_count > 0 %}style="color: var(--accent-red); font-weight: 700;"{% endif %}>
+                                        {{ p.tab_switch_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        <a href="{% url 'quiz:disqualify_participant' p.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Disqualify {{ p.user.username }}?')">DQ</a>
+                                        <a href="{% url 'quiz:remove_participant' p.id %}" class="btn btn-outline btn-sm" style="color: var(--accent-red); border-color: var(--accent-red);" onclick="return confirm('Remove {{ p.user.username }} from the system entirely? This will delete their account and cannot be undone!')">Remove</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted text-center" style="padding: 24px; font-size: 14px;">No approved participants.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Disqualified Tab -->
+                    <div class="tab-content" id="tab-disqualified">
+                        {% if disqualified %}
+                        <table class="admin-table">
+                            <thead><tr><th>Name</th><th>Reason</th><th></th></tr></thead>
+                            <tbody>
+                            {% for p in disqualified %}
+                            <tr>
+                                <td>
+                                    <strong>@{{ p.user.username }}</strong>
+                                    <div style="font-size: 12px; color: var(--text-muted);">📞 {{ p.phone_number|default:'—' }}</div>
+                                </td>
+                                <td>
+                                    {% if p.tab_switch_violated %}
+                                        <span class="badge badge-danger">Tab Switch ({{ p.tab_switch_count }})</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Manual DQ</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'quiz:remove_participant' p.id %}" class="btn btn-outline btn-sm" style="color: var(--accent-red); border-color: var(--accent-red);" onclick="return confirm('Remove {{ p.user.username }} from the system entirely? This will delete their account and cannot be undone!')">Remove</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted text-center" style="padding: 24px; font-size: 14px;">No disqualified participants.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(tabName, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+    btn.classList.add('active');
+}
+
+
+</script>
+{% endblock %}

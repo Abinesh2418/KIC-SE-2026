@@ -1,0 +1,76 @@
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# ========================
+# Django
+# ========================
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+*.log
+
+# ========================
+# Environment & Secrets
+# ========================
+.env
+.env.*
+!.env.template
+!.env.example
+
+# ========================
+# PostgreSQL data
+# ========================
+pgdata/
+
+# ========================
+# Docker
+# ========================
+docker-compose.override.yml
+
+# ========================
+# Virtual environments
+# ========================
+venv/
+.venv/
+env/
+
+# ========================
+# IDE / Editor
+# ========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ========================
+# OS generated
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Jupyter Notebooks
+# ========================
+.ipynb_checkpoints/
+
+# ========================
+# Testing / Coverage
+# ========================
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+TEST*.xml
+

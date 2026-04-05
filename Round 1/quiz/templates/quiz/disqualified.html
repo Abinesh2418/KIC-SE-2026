@@ -1,0 +1,24 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Disqualified{% endblock %}
+
+{% block content %}
+<div class="container-sm fade-in">
+    <div class="card-wrap">
+        <div class="card-shadow"></div>
+        <div class="card text-center">
+            <div style="margin-bottom: 20px;">
+                <span class="sparkle sparkle-red" style="width: 16px; height: 16px;"></span>
+            </div>
+            <h2 style="font-weight: 900;" class="text-accent">Disqualified</h2>
+            <p class="text-muted mt-2" style="font-size: 14px;">
+                You have been disqualified from this event.
+                {% if participant.tab_switch_violated %}
+                    <br>Reason: Tab switch limit exceeded ({{ participant.tab_switch_count }} switches).
+                {% endif %}
+            </p>
+            <div class="mt-4"><span class="badge badge-danger">Disqualified</span></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,286 @@
+{% extends 'debugchallenge/base.html' %}
+
+{% block title %}Grade @{{ participant.user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bug-table { width: 100%; border-collapse: collapse; }
+    .bug-table th, .bug-table td {
+        padding: 12px 16px;
+        border-bottom: 3px solid var(--border-main);
+        text-align: left;
+    }
+    .bug-table thead th {
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+        background: var(--bg-card);
+    }
+    .bug-table tbody tr { transition: background 0.15s; }
+    .bug-table tbody tr:hover { background: var(--bg-card-alt); }
+    .bug-num {
+        font-weight: 800;
+        font-size: 14px;
+        width: 80px;
+    }
+    .bug-check {
+        text-align: center;
+        width: 100px;
+    }
+    .bug-status {
+        text-align: center;
+        width: 100px;
+        font-weight: 700;
+        font-size: 18px;
+    }
+    .bug-status .correct { color: #22c55e; }
+    .bug-status .wrong { color: var(--accent-red); }
+
+    /* Custom checkbox toggle */
+    .bug-toggle {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        height: 28px;
+    }
+    .bug-toggle input { opacity: 0; width: 0; height: 0; }
+    .bug-slider {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        background: var(--accent-red);
+        border-radius: 28px;
+        border: 3px solid var(--border-main);
+        transition: 0.2s;
+    }
+    .bug-slider::before {
+        content: '';
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 2px;
+        bottom: 2px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.2s;
+    }
+    .bug-slider::after {
+        content: '\2717';
+        position: absolute;
+        right: 6px;
+        top: 2px;
+        font-size: 13px;
+        color: white;
+        font-weight: 700;
+    }
+    .bug-toggle input:checked + .bug-slider {
+        background: #22c55e;
+    }
+    .bug-toggle input:checked + .bug-slider::before {
+        transform: translateX(24px);
+    }
+    .bug-toggle input:checked + .bug-slider::after {
+        content: '\2713';
+        left: 6px;
+        right: auto;
+    }
+
+    .challenge-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px;
+        border-bottom: 3px solid var(--border-main);
+    }
+    .challenge-type-badge {
+        display: inline-block;
+        padding: 4px 14px;
+        border: 3px solid var(--border-main);
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .challenge-type-badge.classification { background: #a78bfa; color: #111827; }
+    .challenge-type-badge.regression { background: #60a5fa; color: #111827; }
+    .score-live {
+        font-size: 20px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+    }
+    .score-live .max { font-size: 14px; opacity: 0.6; font-weight: 600; }
+    .grade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    @media (max-width: 768px) {
+        .grade-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container fade-in">
+    <div style="margin-bottom: 24px;">
+        <a href="{% url 'debugchallenge:evaluator_panel' %}" class="btn btn-outline btn-sm" style="margin-bottom: 12px;">&larr; Back to Panel</a>
+        <h1 style="font-size: 28px; font-weight: 900; letter-spacing: -1px;">
+            Grade <span class="text-accent">@{{ participant.user.username }}</span>
+        </h1>
+        <p class="text-muted" style="font-size: 14px;">
+            {{ participant.user.email }}
+            {% if participant.phone_number %} &mdash; {{ participant.phone_number }}{% endif %}
+        </p>
+    </div>
+
+    <form method="post" id="gradeForm">
+        {% csrf_token %}
+
+        <div class="grade-grid">
+            <!-- Classification -->
+            <div class="card-wrap">
+                <div class="card-shadow"></div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div class="challenge-header">
+                        <div>
+                            <span class="challenge-type-badge classification">Classification</span>
+                            <div style="font-weight: 900; font-size: 16px; margin-top: 8px;">Notebook 1</div>
+                        </div>
+                        <div class="score-live">
+                            <span id="clsScore">{{ cls_eval.score }}</span><span class="max">/{{ classification_bugs }}</span>
+                        </div>
+                    </div>
+                    <table class="bug-table">
+                        <thead>
+                            <tr>
+                                <th>Bug</th>
+                                <th style="text-align: center;">Correct?</th>
+                                <th style="text-align: center;">Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bug in cls_bugs %}
+                            <tr>
+                                <td class="bug-num">Bug {{ bug.number }}</td>
+                                <td class="bug-check">
+                                    <label class="bug-toggle">
+                                        <input type="checkbox" name="cls_bug_{{ bug.number }}" {% if bug.checked %}checked{% endif %} onchange="updateScores()">
+                                        <span class="bug-slider"></span>
+                                    </label>
+                                </td>
+                                <td class="bug-status">
+                                    <span class="{% if bug.checked %}correct{% else %}wrong{% endif %}" data-cls-status="{{ bug.number }}">
+                                        {% if bug.checked %}&#10003;{% else %}&#10007;{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Regression -->
+            <div class="card-wrap">
+                <div class="card-shadow"></div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div class="challenge-header">
+                        <div>
+                            <span class="challenge-type-badge regression">Regression</span>
+                            <div style="font-weight: 900; font-size: 16px; margin-top: 8px;">Notebook 2</div>
+                        </div>
+                        <div class="score-live">
+                            <span id="regScore">{{ reg_eval.score }}</span><span class="max">/{{ regression_bugs }}</span>
+                        </div>
+                    </div>
+                    <table class="bug-table">
+                        <thead>
+                            <tr>
+                                <th>Bug</th>
+                                <th style="text-align: center;">Correct?</th>
+                                <th style="text-align: center;">Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bug in reg_bugs %}
+                            <tr>
+                                <td class="bug-num">Bug {{ bug.number }}</td>
+                                <td class="bug-check">
+                                    <label class="bug-toggle">
+                                        <input type="checkbox" name="reg_bug_{{ bug.number }}" {% if bug.checked %}checked{% endif %} onchange="updateScores()">
+                                        <span class="bug-slider"></span>
+                                    </label>
+                                </td>
+                                <td class="bug-status">
+                                    <span class="{% if bug.checked %}correct{% else %}wrong{% endif %}" data-reg-status="{{ bug.number }}">
+                                        {% if bug.checked %}&#10003;{% else %}&#10007;{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total & Save -->
+        <div class="card-wrap" style="margin-top: 24px;">
+            <div class="card-shadow"></div>
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <span style="font-weight: 900; font-size: 18px;">Total Score: </span>
+                    <span style="font-weight: 900; font-size: 24px; color: var(--accent-orange);" id="totalScore">{{ cls_eval.score|add:reg_eval.score }}</span>
+                    <span style="font-weight: 600; font-size: 16px; opacity: 0.6;">/{{ total_bugs }}</span>
+                </div>
+                <div class="btn-wrap" style="display: inline-block;">
+                    <div class="btn-shadow"></div>
+                    <button type="submit" class="btn btn-primary">Save Evaluation</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function updateScores() {
+    // Count classification checks
+    let clsScore = 0;
+    {% for bug in cls_bugs %}
+    {
+        const cb = document.querySelector('input[name="cls_bug_{{ bug.number }}"]');
+        const status = document.querySelector('[data-cls-status="{{ bug.number }}"]');
+        if (cb.checked) {
+            clsScore++;
+            status.className = 'correct';
+            status.innerHTML = '\u2713';
+        } else {
+            status.className = 'wrong';
+            status.innerHTML = '\u2717';
+        }
+    }
+    {% endfor %}
+
+    // Count regression checks
+    let regScore = 0;
+    {% for bug in reg_bugs %}
+    {
+        const cb = document.querySelector('input[name="reg_bug_{{ bug.number }}"]');
+        const status = document.querySelector('[data-reg-status="{{ bug.number }}"]');
+        if (cb.checked) {
+            regScore++;
+            status.className = 'correct';
+            status.innerHTML = '\u2713';
+        } else {
+            status.className = 'wrong';
+            status.innerHTML = '\u2717';
+        }
+    }
+    {% endfor %}
+
+    document.getElementById('clsScore').textContent = clsScore;
+    document.getElementById('regScore').textContent = regScore;
+    document.getElementById('totalScore').textContent = clsScore + regScore;
+}
+</script>
+{% endblock %}

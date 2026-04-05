@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual Environments
+venv/
+env/
+.venv/
+Task_2_venv/
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# Environment / Secrets
+.env
+
+# PostgreSQL Local Data
+pgdata/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp Files
+*.tmp
+*.bak
+*.swp
+
+# Jupyter
+.ipynb_checkpoints/

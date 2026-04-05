@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Fest - Quiz</title>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <style>
+        /* ===== THEME SYSTEM ===== */
+        [data-theme="light"] {
+            --page-bg: #FFFDF8;
+            --bg-primary: #FFFDF8;
+            --bg-secondary: #fff4da;
+            --bg-card: #fff4da;
+            --bg-input: #FFFDF8;
+            --border-color: #111827;
+            --border-hover: #111827;
+            --text-primary: #111827;
+            --text-secondary: #4a4a4a;
+            --text-muted: #6b7280;
+            --accent-orange: #FFC480;
+            --accent-red: #FE4A60;
+            --accent-beige: #EBDBB7;
+            --hover-bg: rgba(255, 196, 128, 0.1);
+            --shadow-color: #EBDBB7;
+            --nav-answered-bg: rgba(255, 196, 128, 0.25);
+            --nav-answered-border: rgba(255, 196, 128, 0.6);
+            --nav-answered-color: #111827;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #111827;
+            --bg-primary: #111827;
+            --bg-secondary: #1e2636;
+            --bg-card: #1e2636;
+            --bg-input: #252d3d;
+            --border-color: #4b5563;
+            --border-hover: #6b7280;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-orange: #FFC480;
+            --accent-red: #FE4A60;
+            --accent-beige: #3d3528;
+            --hover-bg: rgba(255, 196, 128, 0.08);
+            --shadow-color: #0a0f1a;
+            --nav-answered-bg: rgba(255, 196, 128, 0.12);
+            --nav-answered-border: rgba(255, 196, 128, 0.35);
+            --nav-answered-color: #FFC480;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, var(--border-color) 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 3px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .quiz-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .quiz-brand {
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--text-primary);
+        }
+        .quiz-brand .accent { color: var(--accent-orange); }
+
+        .quiz-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .timer {
+            font-size: 22px;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+            min-width: 100px;
+            text-align: center;
+            padding: 4px 14px;
+            border: 3px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+        }
+
+        .timer.warning { color: var(--accent-orange); border-color: var(--accent-orange); }
+        .timer.danger { color: var(--accent-red); border-color: var(--accent-red); animation: timerPulse 1s ease infinite; }
+
+        @keyframes timerPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .tab-switch-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .quiz-body {
+            display: flex;
+            height: calc(100vh - 59px);
+            margin-top: 59px;
+        }
+
+        /* Question Navigator Sidebar */
+        .q-navigator {
+            width: 130px;
+            min-width: 130px;
+            background: var(--bg-secondary);
+            border-right: 3px solid var(--border-color);
+            overflow-y: auto;
+            padding: 12px 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            align-content: start;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        .q-nav-btn {
+            width: 100%;
+            height: 38px;
+            border: 3px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+        }
+
+        .q-nav-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .q-nav-btn.active {
+            background: var(--accent-orange);
+            color: #111827;
+            border-color: #111827;
+            box-shadow: 2px 2px 0 var(--border-color);
+        }
+
+        .q-nav-btn.answered {
+            background: var(--nav-answered-bg);
+            border-color: var(--nav-answered-border);
+            color: var(--nav-answered-color);
+        }
+
+        .q-nav-btn.active.answered {
+            background: var(--accent-orange);
+            color: #111827;
+        }
+
+        /* Question Content */
+        .q-content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .question-card {
+            max-width: 700px;
+            width: 100%;
+        }
+
+        .question-number {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.5;
+            margin-bottom: 32px;
+        }
+
+        .options-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            background: var(--bg-card);
+            border: 3px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 15px;
+        }
+
+        .option-item:hover {
+            background: var(--hover-bg);
+            box-shadow: 3px 3px 0 var(--shadow-color);
+            transform: translate(-1px, -1px);
+        }
+
+        .option-item.selected {
+            border-color: #111827;
+            background: var(--accent-orange);
+            color: #111827;
+            box-shadow: 3px 3px 0 var(--border-color);
+            transform: translate(-1px, -1px);
+        }
+
+        .option-letter {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--bg-input);
+            border: 3px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 13px;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .option-item.selected .option-letter {
+            background: #111827;
+            color: var(--accent-orange);
+            border-color: #111827;
+        }
+
+        .option-text {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .q-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 80px;
+            margin-top: 36px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: 3px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--accent-orange);
+            color: #111827;
+            border-color: #111827;
+        }
+        .btn-primary:hover {
+            box-shadow: 3px 3px 0 var(--border-color);
+            transform: translate(-1px, -1px);
+        }
+
+        .btn-outline {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+        .btn-outline:hover {
+            box-shadow: 3px 3px 0 var(--shadow-color);
+            transform: translate(-1px, -1px);
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+            color: #fff;
+            border-color: #111827;
+        }
+        .btn-danger:hover {
+            box-shadow: 3px 3px 0 var(--border-color);
+            transform: translate(-1px, -1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .btn:disabled:hover {
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Fullscreen prompt overlay */
+        .fs-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .fs-overlay h2 {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-primary);
+        }
+        .fs-overlay h2 .accent { color: var(--accent-orange); }
+
+        .fs-overlay p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            padding: 14px 20px;
+            border-radius: 8px;
+            border: 3px solid var(--border-color);
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 9998;
+            animation: slideIn 0.3s ease;
+            max-width: 350px;
+        }
+
+        .toast-warning {
+            background: var(--accent-orange);
+            color: #111827;
+        }
+
+        .toast-danger {
+            background: var(--accent-red);
+            color: #fff;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Submit confirmation modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 3px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 6px 6px 0 var(--shadow-color);
+        }
+
+        .modal-box h3 { margin-bottom: 12px; font-weight: 900; }
+        .modal-box p { color: var(--text-secondary); margin-bottom: 24px; font-size: 14px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: center; }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--border-color);
+            position: fixed;
+            top: 59px;
+            left: 0;
+            right: 0;
+            z-index: 99;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-orange);
+            transition: width 0.3s ease;
+        }
+
+        /* Theme Toggle in Quiz */
+        .theme-toggle-quiz {
+            background: var(--bg-card);
+            border: 3px solid var(--border-color);
+            border-radius: 8px;
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 16px;
+            transition: all 0.15s;
+        }
+        .theme-toggle-quiz:hover {
+            box-shadow: 2px 2px 0 var(--shadow-color);
+            transform: translate(-1px, -1px);
+        }
+
+        /* Fullscreen-paused overlay */
+        .fs-paused-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-primary);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .fs-paused-overlay.show { display: flex; }
+        .fs-paused-overlay h2 {
+            font-size: 28px; font-weight: 900;
+            color: var(--accent-red);
+        }
+        .fs-paused-overlay p {
+            color: var(--text-secondary);
+            font-size: 15px; max-width: 420px;
+            text-align: center; line-height: 1.6;
+        }
+
+        /* Disabled quiz state */
+        .quiz-disabled .q-content,
+        .quiz-disabled .q-navigator {
+            pointer-events: none;
+            opacity: 0.25;
+            filter: blur(2px);
+            user-select: none;
+        }
+
+        @media (max-width: 768px) {
+            .q-navigator { width: 100px; min-width: 100px; padding: 8px 4px; gap: 4px; }
+            .q-nav-btn { height: 32px; font-size: 12px; }
+            .q-content { padding: 24px 16px; }
+            .question-text { font-size: 17px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fullscreen Prompt -->
+    <div class="fs-overlay" id="fsOverlay">
+        <h2>ML <span class="accent">Fest</span> — Quiz</h2>
+        <p>The quiz will run in fullscreen mode. Click below to start.</p>
+        <button class="btn btn-primary" onclick="enterFullscreen()" style="padding: 14px 40px; font-size: 16px;">
+            Enter Fullscreen & Start
+        </button>
+    </div>
+
+    <!-- Header -->
+    <div class="quiz-header">
+        <div class="quiz-header-left">
+            <div class="quiz-brand">ML <span class="accent">Fest</span></div>
+            <div class="quiz-info">
+                Q <span id="currentQNum">1</span> / {{ questions|length }}
+            </div>
+            <div class="tab-switch-info">
+                <span style="color: var(--accent-red);">!</span>
+                Tab switches: <span id="tabSwitchCount">{{ tab_switch_count }}</span> / {{ max_tab_switches }}
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <button class="theme-toggle-quiz" onclick="toggleTheme()" title="Toggle theme" id="themeToggleQuiz">
+                <span id="themeIconQuiz">☀️</span>
+            </button>
+            <div class="timer" id="timer">--:--</div>
+            <button class="btn btn-danger" onclick="showSubmitModal()" style="padding: 8px 16px; font-size: 13px;">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+
+    <!-- Quiz Body -->
+    <div class="quiz-body" id="quizBody" style="display: none;">
+        <!-- Navigator -->
+        <div class="q-navigator" id="qNavigator">
+            {% for q in questions %}
+            <button class="q-nav-btn" data-index="{{ forloop.counter0 }}" onclick="goToQuestion({{ forloop.counter0 }})">
+                {{ forloop.counter }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <!-- Question Content -->
+        <div class="q-content">
+            <div class="question-card" id="questionCard">
+                <!-- Filled by JS -->
+            </div>
+            <div class="q-controls">
+                <button class="btn btn-outline" id="prevBtn" onclick="prevQuestion()">← Previous</button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Modal -->
+    <div class="modal-overlay" id="submitModal">
+        <div class="modal-box">
+            <h3>Submit Quiz?</h3>
+            <div id="unansweredWarning" style="display: none; background: var(--accent-orange); color: #111827; padding: 12px 16px; border-radius: 8px; border: 3px solid var(--border-color); margin-bottom: 16px; font-weight: 700; font-size: 14px;">
+                ⚠️ You have <span id="unansweredCount">0</span> unanswered question(s)!
+            </div>
+            <p>You have answered <span id="answeredCount">0</span> out of {{ questions|length }} questions.<br>
+            This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="hideSubmitModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="submitQuiz()">Submit Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Paused Overlay -->
+    <div class="fs-paused-overlay" id="fsPausedOverlay">
+        <h2>Fullscreen Required</h2>
+        <p>You have exited fullscreen mode. The quiz is paused. Re-enter fullscreen to continue answering.</p>
+        <button class="btn btn-primary" onclick="enterFullscreen()" style="padding: 14px 40px; font-size: 16px;">
+            Re-enter Fullscreen
+        </button>
+    </div>
+
+    <script>
+        const csrfToken = '{{ csrf_token }}';
+        const questions = [
+            {% for q in questions %}
+            {
+                id: {{ q.id }},
+                no: {{ forloop.counter }},
+                text: "{{ q.question_text|escapejs }}",
+                options: {
+                    A: "{{ q.option_a|escapejs }}",
+                    B: "{{ q.option_b|escapejs }}",
+                    C: "{{ q.option_c|escapejs }}",
+                    D: "{{ q.option_d|escapejs }}",
+                }
+            },
+            {% endfor %}
+        ];
+
+        let answers = {{ answers_json|safe }};
+        let currentIndex = 0;
+        let timeRemaining = {{ time_remaining }};
+        let tabSwitchCount = {{ tab_switch_count }};
+        const maxTabSwitches = {{ max_tab_switches }};
+        let quizSubmitted = false;
+        let timerStarted = false;
+        let timerInterval = null;
+        let syncInterval = null;
+
+        // ============ FULLSCREEN ============
+        let fullscreenMode = true;
+
+        function enterFullscreen() {
+            const el = document.documentElement;
+            if (el.requestFullscreen) el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            else if (el.msRequestFullscreen) el.msRequestFullscreen();
+        }
+
+        function setQuizEnabled(enabled) {
+            const body = document.getElementById('quizBody');
+            if (!body) return;
+            if (enabled) {
+                body.classList.remove('quiz-disabled');
+            } else {
+                body.classList.add('quiz-disabled');
+            }
+        }
+
+        document.addEventListener('fullscreenchange', function() {
+            if (document.fullscreenElement) {
+                // Entered fullscreen
+                fullscreenMode = true;
+                document.getElementById('fsOverlay').style.display = 'none';
+                document.getElementById('fsPausedOverlay').classList.remove('show');
+                document.getElementById('quizBody').style.display = 'flex';
+                setQuizEnabled(true);
+                if (!timerStarted) {
+                    renderQuestion();
+                    startTimer();
+                    timerStarted = true;
+                }
+            } else if (!quizSubmitted) {
+                // Exited fullscreen — pause quiz, record tab switch
+                setQuizEnabled(false);
+                document.getElementById('fsPausedOverlay').classList.add('show');
+                recordTabSwitch('fullscreen_exit');
+            }
+        });
+
+        // ============ TAB SWITCH DETECTION ============
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && !quizSubmitted) {
+                recordTabSwitch('tab_hidden');
+            }
+        });
+
+        function recordTabSwitch(reason) {
+            if (quizSubmitted) return;
+
+            fetch('{% url "quiz:tab_switch" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ reason: reason })
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Tab switch record failed: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                if (data.status === 'violated') {
+                    quizSubmitted = true;
+                    showToast('Tab switch limit exceeded! Auto-submitted.', 'danger');
+                    setTimeout(() => {
+                        window.location.href = '{% url "quiz:result" %}';
+                    }, 2000);
+                } else if (data.status === 'warning') {
+                    tabSwitchCount = data.count;
+                    document.getElementById('tabSwitchCount').textContent = data.count;
+                    showToast(`Warning: Tab switch ${data.count}/${maxTabSwitches}. ${data.remaining} remaining.`, 'warning');
+                }
+            })
+            .catch(err => console.warn('Tab switch record error:', err));
+        }
+
+        // ============ TIMER ============
+        function startTimer() {
+            updateTimerDisplay();
+            setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    autoSubmit();
+                }
+            }, 1000);
+
+            // Sync with server every 30s
+            setInterval(() => {
+                fetch('{% url "quiz:time_remaining" %}')
+                    .then(r => {
+                        if (!r.ok) throw new Error('Time sync failed: ' + r.status);
+                        return r.json();
+                    })
+                    .then(data => {
+                        timeRemaining = data.remaining;
+                        if (!data.is_running) {
+                            autoSubmit();
+                        }
+                    })
+                    .catch(err => console.warn('Time sync error:', err));
+            }, 30000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeRemaining / 60);
+            const secs = timeRemaining % 60;
+            const display = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+            const el = document.getElementById('timer');
+            el.textContent = display;
+            el.className = 'timer';
+            if (timeRemaining <= 60) el.classList.add('danger');
+            else if (timeRemaining <= 300) el.classList.add('warning');
+        }
+
+        // ============ QUESTION RENDERING ============
+        function renderQuestion() {
+            const q = questions[currentIndex];
+            const selectedAnswer = answers[q.id] || null;
+            const answeredCount = Object.keys(answers).length;
+
+            document.getElementById('currentQNum').textContent = q.no;
+            // answered count shown in progress bar only
+
+            // Progress bar
+            const pct = (answeredCount / questions.length) * 100;
+            document.getElementById('progressFill').style.width = pct + '%';
+
+            // Question card
+            const card = document.getElementById('questionCard');
+            card.innerHTML = `
+                <div class="question-number">Question ${q.no} of ${questions.length}</div>
+                <div class="question-text">${q.text}</div>
+                <ul class="options-list">
+                    ${['A','B','C','D'].map(letter => `
+                        <li class="option-item ${selectedAnswer === letter ? 'selected' : ''}"
+                            onclick="selectOption(${q.id}, '${letter}')">
+                            <div class="option-letter">${letter}</div>
+                            <div class="option-text">${q.options[letter]}</div>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+
+            // Navigation buttons
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').textContent = currentIndex === questions.length - 1 ? 'Finish →' : 'Next →';
+
+            // Navigator highlights
+            document.querySelectorAll('.q-nav-btn').forEach((btn, i) => {
+                btn.classList.remove('active');
+                const qId = questions[i].id;
+                if (answers[qId]) {
+                    btn.classList.add('answered');
+                } else {
+                    btn.classList.remove('answered');
+                }
+                if (i === currentIndex) btn.classList.add('active');
+            });
+
+            // Update answered count in modal
+            document.getElementById('answeredCount').textContent = answeredCount;
+        }
+
+        function selectOption(questionId, option) {
+            if (!document.fullscreenElement) return; // Block if not fullscreen
+            answers[questionId] = option;
+            renderQuestion();
+
+            // Save to server
+            fetch('{% url "quiz:save_answer" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question_id: questionId, selected_option: option })
+            })
+            .then(r => { if (!r.ok) throw new Error('Save failed: ' + r.status); return r.json(); })
+            .catch(err => console.warn('Save answer error:', err));
+        }
+
+        function goToQuestion(index) {
+            if (!document.fullscreenElement) return;
+            currentIndex = index;
+            renderQuestion();
+        }
+
+        function prevQuestion() {
+            if (!document.fullscreenElement) return;
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (!document.fullscreenElement) return;
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                renderQuestion();
+            } else {
+                showSubmitModal();
+            }
+        }
+
+        // ============ SUBMIT ============
+        function showSubmitModal() {
+            const answeredCount = Object.keys(answers).length;
+            const totalQuestions = questions.length;
+            const unanswered = totalQuestions - answeredCount;
+            document.getElementById('answeredCount').textContent = answeredCount;
+
+            const warningEl = document.getElementById('unansweredWarning');
+            const unansweredCountEl = document.getElementById('unansweredCount');
+            if (unanswered > 0) {
+                unansweredCountEl.textContent = unanswered;
+                warningEl.style.display = 'block';
+            } else {
+                warningEl.style.display = 'none';
+            }
+
+            document.getElementById('submitModal').classList.add('show');
+        }
+
+        function hideSubmitModal() {
+            document.getElementById('submitModal').classList.remove('show');
+        }
+
+        function submitQuiz() {
+            if (quizSubmitted) return;
+            quizSubmitted = true;
+
+            fetch('{% url "quiz:submit_quiz" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Submit failed: ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                }
+                window.location.href = '{% url "quiz:result" %}';
+            })
+            .catch(err => {
+                console.error('Submit error:', err);
+                quizSubmitted = false;
+                showToast('Submit failed. Please try again.', 'danger');
+            });
+        }
+
+        function autoSubmit() {
+            if (quizSubmitted) return;
+            quizSubmitted = true;
+            showToast('Time is up! Auto-submitting...', 'danger');
+
+            fetch('{% url "quiz:submit_quiz" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Auto-submit failed: ' + r.status);
+                return r.json();
+            })
+            .then(() => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                }
+                setTimeout(() => {
+                    window.location.href = '{% url "quiz:result" %}';
+                }, 1500);
+            })
+            .catch(err => {
+                console.error('Auto-submit error:', err);
+                quizSubmitted = false;
+                // Retry auto-submit after a delay
+                setTimeout(() => autoSubmit(), 3000);
+            });
+        }
+
+        // ============ TOAST ============
+        function showToast(msg, type) {
+            const existing = document.querySelectorAll('.toast');
+            existing.forEach(e => e.remove());
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        // ============ KEYBOARD SHORTCUTS ============
+        document.addEventListener('keydown', function(e) {
+            if (!document.fullscreenElement) return; // Block shortcuts outside fullscreen
+            if (e.key === 'ArrowLeft') prevQuestion();
+            else if (e.key === 'ArrowRight') nextQuestion();
+            else if (e.key === 'a' || e.key === 'A') {
+                const q = questions[currentIndex];
+                selectOption(q.id, 'A');
+            }
+            else if (e.key === 'b' || e.key === 'B') {
+                const q = questions[currentIndex];
+                selectOption(q.id, 'B');
+            }
+            else if (e.key === 'c' || e.key === 'C') {
+                const q = questions[currentIndex];
+                selectOption(q.id, 'C');
+            }
+            else if (e.key === 'd' || e.key === 'D') {
+                const q = questions[currentIndex];
+                selectOption(q.id, 'D');
+            }
+        });
+
+        // Prevent right-click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // ============ THEME TOGGLE ============
+        function toggleTheme() {
+            var html = document.documentElement;
+            var cur = html.getAttribute('data-theme');
+            var next = cur === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            var theme = document.documentElement.getAttribute('data-theme');
+            var icon = document.getElementById('themeIconQuiz');
+            if (icon) icon.textContent = theme === 'light' ? '🌙' : '☀️';
+        }
+        updateThemeIcon();
+    </script>
+</body>
+</html>
