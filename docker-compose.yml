@@ -1,8 +1,8 @@
 # ============================================================
 # KIC-AIML-2026 — Production Docker Compose
 # ============================================================
-# 1 PostgreSQL server (port 7737) — 1 database
-# 1 Django app: KIC AI/ML Assessment (port 7738)
+# 1 PostgreSQL server (port 15432) — 1 database
+# 1 Django app: KIC AI/ML Assessment (port 11000)
 # ============================================================
 
 services:
@@ -16,7 +16,7 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-iqube@KIC2026}
     ports:
-      - "${DB_EXTERNAL_PORT:-7737}:5432"
+      - "${DB_EXTERNAL_PORT:-15432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
@@ -26,7 +26,7 @@ services:
       timeout: 5s
       retries: 10
 
-  # ── KIC AI/ML Assessment (port 7738) ────────────────────
+  # ── KIC AI/ML Assessment (port 11000) ───────────────────
   round1:
     build:
       context: .
@@ -34,7 +34,7 @@ services:
     restart: unless-stopped
     entrypoint: ["/bin/bash", "/app/entrypoint.prod.sh"]
     ports:
-      - "${ROUND1_PORT:-7738}:8000"
+      - "${ROUND1_PORT:-11000}:8000"
     environment:
       - DB_NAME=kic_aiml_r1
       - DB_USER=${DB_USER:-postgres}
