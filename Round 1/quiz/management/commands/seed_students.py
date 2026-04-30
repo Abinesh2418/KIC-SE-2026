@@ -86,7 +86,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         event, _ = Event.objects.get_or_create(
-            name="KIC Software Engineering Assessment",
+            name="KIC AIML 2026 Assessment",
             defaults={'duration_minutes': 30, 'max_tab_switches': 3}
         )
 
