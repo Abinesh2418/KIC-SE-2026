@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#FCA847">
-    <title>{% block title %}ML Fest{% endblock %} | Team Qernels</title>
+    <title>{% block title %}KIC Software Engineering{% endblock %} | iQube - KIC</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
     <style>
         /* ========== GITINGEST NEO-BRUTALIST DESIGN SYSTEM ========== */
@@ -88,12 +88,13 @@
         }
 
         .navbar-logo {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
             border: 2px solid var(--border-main);
-            object-fit: cover;
+            object-fit: contain;
             flex-shrink: 0;
+            background: #fff;
         }
 
         .navbar-logo-text {
@@ -556,7 +557,7 @@
         @media (max-width: 768px) {
             .navbar { padding: 0 12px; }
             .navbar-logo-text { display: none; }
-            .navbar-logo { width: 36px; height: 36px; }
+            .navbar-logo { width: 40px; height: 40px; }
             .brand-text { font-size: 18px; }
             .brand-sub { font-size: 8px; letter-spacing: 3px; }
             .hero h1 { font-size: 36px; letter-spacing: -1px; }
@@ -570,13 +571,13 @@
     <nav class="navbar">
         <div class="navbar-left">
             <a href="{% url 'quiz:home' %}">
-                <img src="{% static 'quiz/images/team_qernels_logo.jpeg' %}" alt="Team Qernels" class="navbar-logo">
+                <img src="{% static 'quiz/images/image.png' %}" alt="iQube - KIC" class="navbar-logo">
             </a>
-            <a href="{% url 'quiz:home' %}" class="navbar-logo-text">Team Qernels</a>
+            <a href="{% url 'quiz:home' %}" class="navbar-logo-text">iQube - KIC</a>
         </div>
         <a href="{% url 'quiz:home' %}" class="navbar-center">
-            <div class="brand-text">ML <span class="brand-accent">Fest</span></div>
-            <div class="brand-sub">Yugam 2026</div>
+            <div class="brand-text">KIC <span class="brand-accent">SE</span></div>
+            <div class="brand-sub">Software Engineering 2026</div>
         </a>
         <div class="navbar-links">
             <a href="{% url 'quiz:leaderboard' %}" class="nav-link">Leaderboard</a>
@@ -608,7 +609,7 @@
     {% block content %}{% endblock %}
 
     <footer class="footer">
-        ML Fest &mdash; Team Qernels &copy; 2026
+        KIC Software Engineering &mdash; iQube - KIC &copy; 2026
     </footer>
 
 

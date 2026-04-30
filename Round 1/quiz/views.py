@@ -32,7 +32,7 @@ def register(request):
             Participant.objects.create(
                 user=user,
                 event=event,
-                phone_number=form.cleaned_data.get('phone_number', ''),
+                roll_no=form.cleaned_data.get('roll_no', ''),
             )
             messages.success(request, 'Registration successful! Please wait for admin approval.')
             return redirect('quiz:login')
@@ -274,21 +274,56 @@ def result_view(request):
     return render(request, 'quiz/result.html', context)
 
 
+from quiz.constants import SECTION_RANGES, SECTION_TOTALS, SECTION_TOTALS_BY_DOMAIN, get_question_section, get_multiplier
+
+
 def leaderboard(request):
     event = Event.objects.first()
     is_admin = request.user.is_authenticated and request.user.is_staff
-    
-    # Check if leaderboard is public or user is admin
+
     if event and not event.leaderboard_public and not is_admin:
         return render(request, 'quiz/leaderboard_private.html', {'event': event})
 
-    participants = Participant.objects.filter(
-        event=event,
-        has_submitted=True,
-    ).exclude(status='disqualified').order_by('-score', 'time_taken_ms')
+    participants = list(
+        Participant.objects.filter(event=event, has_submitted=True)
+        .exclude(status='disqualified')
+        .order_by('-score', 'time_taken_ms')
+        .select_related('user')
+    )
+
+    # Fetch all correct answers in one query
+    all_answers = Answer.objects.filter(
+        participant__in=participants,
+        question__event=event,
+    ).select_related('question')
+
+    # Group answers by participant
+    from collections import defaultdict
+    p_answers = defaultdict(list)
+    for ans in all_answers:
+        p_answers[ans.participant_id].append(ans)
+
+    # Build per-participant section scores (with cross-domain 2x multiplier)
+    participants_data = []
+    for p in participants:
+        answers = p_answers[p.id]
+        section_scores = {}
+        for name, start, end in SECTION_RANGES:
+            if start is None:
+                section_scores[name] = 0
+            else:
+                section_scores[name] = sum(
+                    get_multiplier(p.domain, name)
+                    for a in answers
+                    if start <= a.question.question_no <= end
+                    and a.selected_option == a.question.correct_answer
+                )
+        participants_data.append({'participant': p, 'section_scores': section_scores})
 
     context = {
-        'participants': participants,
+        'participants_data': participants_data,
+        'sections': [s[0] for s in SECTION_RANGES],
+        'section_totals': SECTION_TOTALS,
         'event': event,
         'is_admin': is_admin,
     }
@@ -301,7 +336,7 @@ def leaderboard(request):
 def admin_dashboard(request):
     event = Event.objects.first()
     if not event:
-        event = Event.objects.create(name="ML Fest MCQ Round")
+        event = Event.objects.create(name="KIC AIML 2026 Assessment")
 
     participants = Participant.objects.filter(event=event).select_related('user')
     pending = participants.filter(status='pending')
@@ -423,7 +458,7 @@ def reset_quiz(request):
             score=0,
             time_taken_ms=0,
             has_submitted=False,
-            status='approved',
+            status='pending',
         )
 
         # Reset event state — keep is_active=False so admin can start again
@@ -431,7 +466,7 @@ def reset_quiz(request):
         event.started_at = None
         event.save()
 
-        messages.success(request, 'Quiz has been reset! All registered participants are approved and ready for the next round.')
+        messages.success(request, 'Quiz has been reset! All participants moved back to pending — approve them before starting.')
     return redirect('quiz:admin_dashboard')
 
 
@@ -481,7 +516,7 @@ def export_leaderboard_xlsx(request):
 
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Round 1 - Leaderboard"
+    ws.title = "KIC AIML 2026 - Leaderboard"
 
     # Styles
     header_font = Font(bold=True, color="FFFFFF", size=12)
@@ -492,7 +527,13 @@ def export_leaderboard_xlsx(request):
         top=Side(style='thin'), bottom=Side(style='thin'),
     )
 
-    headers = ["Rank", "Username", "Email", "Phone", "Score", "Total Questions", "Time Taken", "Status"]
+    headers = [
+        "Rank", "Name", "Email", "Roll No", "Domain",
+        "PURE AI", "AI+DEV", "AI+CYBER",
+        "PURE WEB", "WEB+CYBER", "WEB+DEV", "DBMS",
+        "Final Score", "Time Taken", "Status",
+        "NOTE: Cross-domain questions score 2x. DBMS is neutral (1x) for all domains."
+    ]
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.font = header_font
@@ -500,26 +541,54 @@ def export_leaderboard_xlsx(request):
         cell.alignment = header_align
         cell.border = thin_border
 
+    # Fetch all answers for section scoring
+    from collections import defaultdict
+    all_answers = Answer.objects.filter(
+        participant__in=participants, question__event=event
+    ).select_related('question')
+    p_answers = defaultdict(list)
+    for ans in all_answers:
+        p_answers[ans.participant_id].append(ans)
+
     for i, p in enumerate(participants, 1):
-        # Convert time_taken_ms to readable format
         total_sec = p.time_taken_ms // 1000
         mins, secs = divmod(total_sec, 60)
         time_str = f"{mins}m {secs}s"
 
+        answers = p_answers[p.id]
+        sec_scores = {}
+        for name, start, end in SECTION_RANGES:
+            if start is None:
+                sec_scores[name] = 0
+            else:
+                sec_scores[name] = sum(
+                    get_multiplier(p.domain, name)
+                    for a in answers
+                    if start <= a.question.question_no <= end
+                    and a.selected_option == a.question.correct_answer
+                )
+
         row = [
             i,
-            p.user.username,
+            f"{p.user.first_name} {p.user.last_name}".strip() or p.user.username,
             p.user.email,
-            p.phone_number,
+            p.roll_no,
+            p.domain,
+            sec_scores['PURE AI'],
+            sec_scores['AI+DEV'],
+            sec_scores['AI+CYBER'],
+            sec_scores['PURE WEB'],
+            sec_scores['WEB+CYBER'],
+            sec_scores['WEB+DEV'],
+            sec_scores['DBMS'],
             p.score,
-            total_questions,
             time_str,
             p.get_status_display(),
         ]
         for col, val in enumerate(row, 1):
             cell = ws.cell(row=i + 1, column=col, value=val)
             cell.border = thin_border
-            if col in (1, 5, 6):
+            if col in (1, 13):
                 cell.alignment = Alignment(horizontal="center")
 
     # Auto-width columns
@@ -530,6 +599,6 @@ def export_leaderboard_xlsx(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = 'attachment; filename="Round1_Leaderboard.xlsx"'
+    response['Content-Disposition'] = 'attachment; filename="KIC_SE_Leaderboard.xlsx"'
     wb.save(response)
     return response

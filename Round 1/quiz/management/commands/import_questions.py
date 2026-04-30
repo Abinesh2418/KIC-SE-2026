@@ -11,14 +11,14 @@ class Command(BaseCommand):
         parser.add_argument(
             '--csv',
             type=str,
-            default='Final-Mixed_60_MCQ.csv',
-            help='Path to the CSV file (default: Final-Mixed_60_MCQ.csv)',
+            default='KIC-MCQ.csv',
+            help='Path to the CSV file (default: KIC-MCQ.csv)',
         )
         parser.add_argument(
             '--event-name',
             type=str,
-            default='ML Fest MCQ Round',
-            help='Name of the event (default: ML Fest MCQ Round)',
+            default='KIC AIML 2026 Assessment',
+            help='Name of the event (default: KIC AIML 2026 Assessment)',
         )
 
     def handle(self, *args, **options):

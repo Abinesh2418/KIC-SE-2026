@@ -13,24 +13,51 @@
         border-radius: 8px;
         background: var(--card-bg);
     }
-    .lb-rank.gold { background: #FFC480; color: #111827; }
+    .lb-rank.gold   { background: #FFC480; color: #111827; }
     .lb-rank.silver { background: #EBDBB7; color: #111827; }
     .lb-rank.bronze { background: #DBA97D; color: #111827; }
+
     .lb-table th, .lb-table td {
-        padding: 14px 16px;
+        padding: 12px 14px;
         border-bottom: 3px solid var(--border-color);
+        white-space: nowrap;
     }
-    .lb-table thead th { font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; color: var(--text-secondary); }
+    .lb-table thead th {
+        font-weight: 800; text-transform: uppercase;
+        font-size: 10px; letter-spacing: 1px;
+        color: var(--text-secondary);
+        background: var(--bg-secondary);
+        position: sticky; top: 0; z-index: 1;
+    }
     .lb-table { width: 100%; border-collapse: collapse; }
     .lb-table tbody tr { transition: background 0.15s; }
     .lb-table tbody tr:hover { background: var(--hover-bg); }
+
     .score-pill {
-        display: inline-block; padding: 4px 12px;
+        display: inline-block; padding: 4px 10px;
         border: 3px solid var(--border-color);
         border-radius: 6px;
-        font-weight: 800; font-size: 15px;
+        font-weight: 800; font-size: 14px;
         background: var(--accent-orange);
         color: #111827;
+    }
+    .sec-score {
+        display: inline-block; padding: 3px 8px;
+        border: 2px solid var(--border-color);
+        border-radius: 5px;
+        font-weight: 700; font-size: 13px;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        min-width: 38px; text-align: center;
+    }
+    .sec-score.zero { opacity: 0.35; }
+    .final-pill {
+        display: inline-block; padding: 4px 12px;
+        border: 3px solid #111827;
+        border-radius: 6px;
+        font-weight: 900; font-size: 14px;
+        background: #111827;
+        color: #FFC480;
     }
 </style>
 {% endblock %}
@@ -41,9 +68,15 @@
         <h1 style="font-size: 36px; font-weight: 900; letter-spacing: -1px;">
             Leader<span class="text-accent">board</span>
         </h1>
-        <p class="text-muted" style="font-size: 14px;">ML Fest MCQ Round &mdash; Team Qernels</p>
+        <p class="text-muted" style="font-size: 14px;">KIC Software Engineering &mdash; iQube - KIC</p>
         {% if is_admin %}
-        <a href="{% url 'quiz:export_leaderboard' %}" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 20px; background: var(--accent-orange, #FFC480); color: #111827; font-weight: 700; font-size: 13px; border: 3px solid var(--border-color, #111827); border-radius: 8px; text-decoration: none; cursor: pointer; transition: transform 0.1s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+        <a href="{% url 'quiz:export_leaderboard' %}"
+           style="display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+                  padding: 8px 20px; background: var(--accent-orange); color: #111827;
+                  font-weight: 700; font-size: 13px; border: 3px solid var(--border-color);
+                  border-radius: 8px; text-decoration: none; transition: transform 0.1s;"
+           onmouseover="this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.transform='none'">
             &#x1F4E5; Download Results (.xlsx)
         </a>
         {% endif %}
@@ -52,19 +85,25 @@
     <div class="card-wrap">
         <div class="card-shadow"></div>
         <div class="card" style="padding: 0; overflow: hidden;">
-            {% if participants %}
+            {% if participants_data %}
             <div style="overflow-x: auto;">
                 <table class="lb-table">
                     <thead>
                         <tr>
-                            <th style="width: 70px; text-align: center;">Rank</th>
+                            <th style="text-align: center;">Rank</th>
                             <th>Participant</th>
-                            <th style="text-align: center;">Score</th>
+                            <th>Roll No</th>
+                            <th>Domain</th>
+                            {% for section in sections %}
+                            <th style="text-align: center;">{{ section }}</th>
+                            {% endfor %}
+                            <th style="text-align: center;">Final Score</th>
                             <th style="text-align: right;">Time Taken</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for p in participants %}
+                        {% for row in participants_data %}
+                        {% with p=row.participant ss=row.section_scores %}
                         <tr>
                             <td style="text-align: center;">
                                 {% if forloop.counter == 1 %}
@@ -78,16 +117,34 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <div style="font-weight: 700;">{{ p.user.username }}</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">@{{ p.user.username }}</div>
+                                <div style="font-weight: 700;">{{ p.user.first_name }} {{ p.user.last_name }}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">{{ p.user.email }}</div>
                             </td>
+                            <td style="font-weight: 600; font-size: 13px;">{{ p.roll_no }}</td>
+                            <td>
+                                <span class="badge {% if p.domain == 'AIML' %}badge-info{% else %}badge-warning{% endif %}">
+                                    {{ p.domain }}
+                                </span>
+                            </td>
+                            {% for section in sections %}
                             <td style="text-align: center;">
-                                <span class="score-pill">{{ p.score }}<span style="font-weight: 500; font-size: 12px; opacity: 0.7;">/{{ event.questions.count }}</span></span>
+                                {% with val=ss|get_item:section total=section_totals|get_item:section %}
+                                {% if total == 0 %}
+                                    <span class="sec-score zero">—</span>
+                                {% else %}
+                                    <span class="sec-score {% if val == 0 %}zero{% endif %}">{{ val }}</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            {% endfor %}
+                            <td style="text-align: center;">
+                                <span class="final-pill">{{ p.score }}</span>
                             </td>
                             <td style="text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
                                 {{ p.time_taken_ms|ms_to_time }}
                             </td>
                         </tr>
+                        {% endwith %}
                         {% endfor %}
                     </tbody>
                 </table>
@@ -100,6 +157,4 @@
         </div>
     </div>
 </div>
-
-
 {% endblock %}

@@ -4,6 +4,18 @@ register = template.Library()
 
 
 @register.filter
+def getfield(form, field_name):
+    """Access a form field by dynamic name in templates."""
+    return form[field_name]
+
+
+@register.filter
+def get_item(dictionary, key):
+    """Access a dict value by key in templates."""
+    return dictionary.get(key, 0)
+
+
+@register.filter
 def ms_to_time(value):
     """Convert milliseconds to 'Xm Ys' format."""
     try:

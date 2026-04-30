@@ -13,12 +13,12 @@ python manage.py import_questions
 # Create superuser from env vars if not exists
 python -c "
 import django, os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mlfest.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'software_engineer.settings')
 django.setup()
 from django.contrib.auth.models import User
-username = os.environ.get('ADMIN_USERNAME', 'teamqernels@gmail.com')
-password = os.environ.get('ADMIN_PASSWORD', 'teamqernels@iQube42')
-email = os.environ.get('ADMIN_EMAIL', 'teamqernels@gmail.com')
+username = os.environ.get('ADMIN_USERNAME', 'iqube@kic.ac.in')
+password = os.environ.get('ADMIN_PASSWORD', 'iqube@KIC2026')
+email = os.environ.get('ADMIN_EMAIL', 'iqube@kic.ac.in')
 if not User.objects.filter(username=username).exists():
     User.objects.create_superuser(username, email, password)
     print(f'Superuser {username} created')

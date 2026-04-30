@@ -15,7 +15,7 @@ class CustomUser(AbstractUser):
 
 
 class Event(models.Model):
-    name = models.CharField(max_length=200, default="ML Fest MCQ Round")
+    name = models.CharField(max_length=200, default="KIC AIML 2026 Assessment")
     is_active = models.BooleanField(default=False)
     duration_minutes = models.PositiveIntegerField(default=30)
     max_tab_switches = models.PositiveIntegerField(default=3)
@@ -65,7 +65,8 @@ class Participant(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='r1_participant')
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants', null=True, blank=True)
-    phone_number = models.CharField(max_length=15, blank=True, default='')
+    roll_no = models.CharField(max_length=20, blank=True, default='')
+    domain = models.CharField(max_length=50, blank=True, default='AIML')
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
     started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
@@ -102,17 +103,19 @@ class Participant(models.Model):
         return elapsed >= self.event.duration_minutes * 60
 
     def calculate_score(self):
-        correct = 0
+        from quiz.constants import get_question_section, get_multiplier
+        total = 0
         answers = self.answers.select_related('question')
         for ans in answers:
             if ans.selected_option == ans.question.correct_answer:
-                correct += 1
-        self.score = correct
+                section = get_question_section(ans.question.question_no)
+                total += get_multiplier(self.domain, section)
+        self.score = total
         if self.started_at and self.finished_at:
             delta = self.finished_at - self.started_at
             self.time_taken_ms = int(delta.total_seconds() * 1000)
         self.save()
-        return correct
+        return total
 
 
 class Answer(models.Model):

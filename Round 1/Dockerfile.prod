@@ -15,10 +15,10 @@ COPY ["Round 1/requirements.txt", "/app/requirements.txt"]
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy Round 1 source code
-COPY ["Round 1/mlfest/", "/app/mlfest/"]
+COPY ["Round 1/software_engineer/", "/app/software_engineer/"]
 COPY ["Round 1/quiz/", "/app/quiz/"]
 COPY ["Round 1/manage.py", "/app/manage.py"]
-COPY ["Round 1/Final-Mixed_60_MCQ.csv", "/app/Final-Mixed_60_MCQ.csv"]
+COPY ["Round 1/KIC-SE-MCQ.csv", "/app/KIC-SE-MCQ.csv"]
 
 # Remove old migration files (regenerated at startup)
 RUN find /app -path "*/migrations/*.py" -not -name "__init__.py" -delete 2>/dev/null; \

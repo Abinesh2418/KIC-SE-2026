@@ -1,0 +1,48 @@
+{% extends 'quiz/base.html' %}
+{% load quiz_filters %}
+
+{% block title %}Section B — Descriptive{% endblock %}
+
+{% block content %}
+<div class="container fade-in">
+    <div class="card-wrap">
+        <div class="card-shadow"></div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Section B &mdash; Descriptive Questions</span>
+                <span class="badge badge-info">5 Questions</span>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">
+                Answer all 5 questions below. Your responses are saved when you click
+                <strong>Save Answers</strong>. You can return and update your answers at any time.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                {% for q in questions %}
+                <div class="form-group" style="margin-bottom: 32px;">
+                    <label class="form-label">
+                        Q{{ q.no }}. {{ q.text }}
+                    </label>
+                    {% with field_name="answer_"|add:q.no %}
+                        {{ form|getfield:field_name }}
+                    {% endwith %}
+                </div>
+                {% empty %}
+                <p class="text-muted">Descriptive questions not loaded. Please contact the admin.</p>
+                {% endfor %}
+
+                {% if questions %}
+                <div style="display: flex; justify-content: flex-end; margin-top: 24px;">
+                    <div class="btn-wrap">
+                        <div class="btn-shadow"></div>
+                        <button type="submit" class="btn btn-primary">Save Answers</button>
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

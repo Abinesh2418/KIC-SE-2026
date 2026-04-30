@@ -1,25 +1,25 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: mlfest-db
+    container_name: kic-aiml-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-mlfest_db}
+      POSTGRES_DB: ${DB_NAME:-kic_aiml_db}
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-mlfest_pass}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kic_aiml_pass}
     ports:
       - "7739:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-mlfest_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-kic_aiml_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   app:
     build: .
-    container_name: mlfest-app
+    container_name: kic-aiml-app
     restart: unless-stopped
     env_file:
       - .env.docker

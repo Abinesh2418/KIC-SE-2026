@@ -7,9 +7,9 @@ User = get_user_model()
 
 class ParticipantRegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
-    phone_number = forms.CharField(
-        max_length=15, required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'e.g. 9876543210'})
+    roll_no = forms.CharField(
+        max_length=20, required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'e.g. 24BAD018'})
     )
 
     class Meta:
@@ -23,7 +23,7 @@ class ParticipantRegisterForm(UserCreationForm):
                 'class': 'form-input',
                 'autocomplete': 'off',
             })
-        self.fields['phone_number'].widget.attrs.update({
+        self.fields['roll_no'].widget.attrs.update({
             'class': 'form-input',
             'autocomplete': 'off',
         })

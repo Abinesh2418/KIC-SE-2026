@@ -5,20 +5,19 @@ from .models import CustomUser
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    list_display = ('username', 'email', 'role', 'is_approved', 'is_staff', 'is_active')
+    list_display = ('username', 'roll_no', 'email', 'role', 'is_approved', 'is_active')
     list_filter = ('role', 'is_approved', 'is_staff', 'is_active')
-    search_fields = ('username', 'email')
+    search_fields = ('username', 'email', 'roll_no')
     list_editable = ('is_approved', 'role')
-    ordering = ('-date_joined',)
+    ordering = ('roll_no',)
 
-    # Add custom fields to the admin forms
     fieldsets = UserAdmin.fieldsets + (
-        ('ML Fest Fields', {
-            'fields': ('role', 'is_approved', 'total_points', 'last_flag_at'),
+        ('KIC AIML Fields', {
+            'fields': ('roll_no', 'domain', 'role', 'is_approved'),
         }),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('ML Fest Fields', {
-            'fields': ('role', 'is_approved'),
+        ('KIC AIML Fields', {
+            'fields': ('roll_no', 'domain', 'role', 'is_approved'),
         }),
     )
