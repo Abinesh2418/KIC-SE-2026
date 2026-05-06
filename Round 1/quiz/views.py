@@ -33,6 +33,7 @@ def register(request):
                 user=user,
                 event=event,
                 roll_no=form.cleaned_data.get('roll_no', ''),
+                domain=form.cleaned_data.get('domain', ''),
             )
             messages.success(request, 'Registration successful! Please wait for admin approval.')
             return redirect('quiz:login')

@@ -19,7 +19,7 @@ SECTION_TOTALS_BY_DOMAIN = {
         'PURE AI': 25, 'AI+DEV': 5,  'AI+CYBER': 5,
         'PURE WEB': 50, 'WEB+CYBER': 10, 'WEB+DEV': 10, 'DBMS': 5,
     },
-    'Web & App Dev': {
+    'Web & App Development': {
         'PURE AI': 50, 'AI+DEV': 10, 'AI+CYBER': 10,
         'PURE WEB': 25, 'WEB+CYBER': 5,  'WEB+DEV': 5,  'DBMS': 5,
     },
@@ -42,6 +42,6 @@ def get_multiplier(domain, section):
         return 1
     if domain == 'AIML' and section in WEB_SECTIONS:
         return 2
-    if domain == 'Web & App Dev' and section in AI_SECTIONS:
+    if domain == 'Web & App Development' and section in AI_SECTIONS:
         return 2
     return 1

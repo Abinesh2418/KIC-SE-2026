@@ -5,12 +5,20 @@ from django.contrib.auth.forms import UserCreationForm
 User = get_user_model()
 
 
+DOMAIN_CHOICES = [
+    ('', 'Select your domain'),
+    ('AIML', 'AIML'),
+    ('Web & App Development', 'Web & App Development'),
+]
+
+
 class ParticipantRegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
     roll_no = forms.CharField(
         max_length=20, required=True,
         widget=forms.TextInput(attrs={'placeholder': 'e.g. 24BAD018'})
     )
+    domain = forms.ChoiceField(choices=DOMAIN_CHOICES, required=True)
 
     class Meta:
         model = User
@@ -26,6 +34,9 @@ class ParticipantRegisterForm(UserCreationForm):
         self.fields['roll_no'].widget.attrs.update({
             'class': 'form-input',
             'autocomplete': 'off',
+        })
+        self.fields['domain'].widget.attrs.update({
+            'class': 'form-input',
         })
 
 
